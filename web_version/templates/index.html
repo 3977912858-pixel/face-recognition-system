@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>稳定版人脸识别考勤系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        header {
+            background: linear-gradient(90deg, #1a2a6c, #2c3e50);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: #4CAF50;
+        }
+
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .system-status {
+            display: flex;
+            gap: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .status-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #000;
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #video-feed {
+            width: 100%;
+            display: block;
+            max-height: 600px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .btn-recognize {
+            background: linear-gradient(90deg, #28a745, #218838);
+            color: white;
+        }
+
+        .btn-recognize:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-stop {
+            background: linear-gradient(90deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-restart {
+            background: linear-gradient(90deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, #1a2a6c, #2c3e50);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .person-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .person-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .person-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .person-name {
+            font-weight: 500;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .attendance-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .attendance-item {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .attendance-name {
+            font-weight: 500;
+            color: #1a2a6c;
+        }
+
+        .attendance-time {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .add-person-form {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-title {
+            margin-bottom: 15px;
+            color: #1a2a6c;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-add {
+            background: linear-gradient(90deg, #1a2a6c, #2c3e50);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #1a2a6c;
+            color: #1a2a6c;
+        }
+
+        .tab-content {
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .system-info {
+            padding: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #1a2a6c;
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            padding: 12px;
+            font-weight: 600;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-export {
+            background: linear-gradient(90deg, #28a745, #218838);
+            color: white;
+        }
+
+        .btn-clear {
+            background: linear-gradient(90deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+
+        /* 【新增】清空全部人员按钮样式 */
+        .btn-danger-all {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            color: white;
+            margin-top: 5px;
+        }
+
+        .btn-danger-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-inactive {
+            background: #dc3545;
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            margin-top: 30px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 【新增】空人员库提示横幅 */
+        .empty-library-banner {
+            background: linear-gradient(90deg, #ff9800, #f57c00);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* 【新增】自定义确认弹窗遮罩 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-box .modal-icon {
+            font-size: 3rem;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .modal-box .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .modal-box .modal-msg {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-box .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-box .modal-buttons button {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .modal-btn-confirm {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #c0392b;
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .system-status {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .status-item {
+                min-width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-lock"></i>
+                <h1>稳定版人脸识别考勤系统</h1>
+            </div>
+            <div class="system-status">
+                <div class="status-item">
+                    <div class="status-value">{{ system_status.user_count }}</div>
+                    <div class="status-label">注册用户</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value">{{ system_status.attendance_count }}</div>
+                    <div class="status-label">考勤记录</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value">{{ system_status.frame_rate }}</div>
+                    <div class="status-label">帧率(FPS)</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value">{{ system_status.uptime }}</div>
+                    <div class="status-label">运行时间</div>
+                </div>
+            </div>
+            <div class="status-badge {% if system_status.camera_status == '已连接' %}status-active{% else %}status-inactive{% endif %}">
+                摄像头: {{ system_status.camera_status }}
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="video-section">
+                <!-- 【新增】空人员库提示横幅 -->
+                {% if person_list|length == 0 %}
+                <div class="empty-library-banner">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    人员库为空！请先添加至少1位人员后再开启识别，否则所有检测到的人脸将显示为「陌生人」
+                </div>
+                {% endif %}
+
+                <div class="video-container">
+                    <img id="video-feed" src="{{ url_for('video_feed') }}">
+                </div>
+
+                <div class="controls">
+                    <form action="{{ url_for('toggle_recognize') }}" method="post" id="recognize-form">
+                        {% if is_recognizing %}
+                            <button class="btn btn-stop" type="submit">
+                                <i class="fas fa-stop-circle"></i>停止识别
+                            </button>
+                        {% else %}
+                            <button class="btn btn-recognize" type="submit" id="btn-start-recognize">
+                                <i class="fas fa-play-circle"></i>开始识别
+                            </button>
+                        {% endif %}
+                    </form>
+
+                    <form action="{{ url_for('restart_camera') }}" method="post">
+                        <button class="btn btn-restart" type="submit">
+                            <i class="fas fa-sync-alt"></i>重启摄像头
+                        </button>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <i class="fas fa-list-check"></i>最近考勤记录
+                    </div>
+                    <div class="panel-content">
+                        <div class="attendance-list">
+                            {% for record in attendance_records %}
+                                <div class="attendance-item">
+                                    <span class="attendance-name">{{ record.name }}</span>
+                                    <div>
+                                        <div class="attendance-time">{{ record.date }}</div>
+                                        <div class="attendance-time">{{ record.time }}</div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p>暂无考勤记录</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="panel">
+                    <div class="panel-header">
+                        <i class="fas fa-users"></i>已注册人员
+                    </div>
+                    <div class="panel-content">
+                        <div class="person-list">
+                            {% for person in person_list %}
+                                <div class="person-item">
+                                    <span class="person-name">{{ person }}</span>
+                                    <form action="{{ url_for('delete_person') }}" method="post">
+                                        <input type="hidden" name="name" value="{{ person }}">
+                                        <button class="delete-btn" type="submit">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <p>暂无注册人员</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="add">添加人员</div>
+                        <div class="tab" data-tab="manage">系统管理</div>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="add-tab">
+                            <form action="{{ url_for('add_person') }}" method="post" enctype="multipart/form-data">
+                                <div class="form-group">
+                                    <label for="name">姓名</label>
+                                    <input type="text" class="form-control" name="name" placeholder="输入姓名" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="file">上传照片 (至少3张)</label>
+                                    <input type="file" class="form-control" name="file" accept="image/*" multiple required>
+                                </div>
+                                <button class="btn btn-add" type="submit">
+                                    <i class="fas fa-user-plus"></i> 添加人员
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane" id="manage-tab">
+                            <div class="system-info">
+                                <div class="info-item">
+                                    <span class="info-label">系统版本</span>
+                                    <span class="info-value">稳定版 v2.1</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">识别引擎</span>
+                                    <span class="info-value">dlib + OpenCV</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">最后训练</span>
+                                    <span class="info-value">{{ system_status.last_updated }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">系统状态</span>
+                                    <span class="info-value">{{ system_status.recognition_status }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">启动时间</span>
+                                    <span class="info-value">{{ system_status.system_uptime }}</span>
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <!-- 批量导入全班照片 -->
+                                <div style="margin-bottom: 15px; padding: 12px; background: #f0f7ff; border-radius: 8px; border: 1px dashed #4a90d9;">
+                                    <label style="font-weight: 600; color: #1a2a6c; display: block; margin-bottom: 8px;">
+                                        <i class="fas fa-folder-open"></i> 批量导入全班照片
+                                    </label>
+                                    <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">
+                                        选择按姓名建好的文件夹，每人至少3张照片
+                                    </p>
+                                    <input type="file" id="batch-folder" webkitdirectory directory multiple
+                                           style="font-size: 0.85rem; margin-bottom: 8px;">
+                                    <button class="btn btn-action btn-export" type="button" id="btn-batch-import"
+                                            style="background: linear-gradient(90deg, #6c5ce7, #a29bfe);">
+                                        <i class="fas fa-users-cog"></i> 开始批量导入
+                                    </button>
+                                    <div id="batch-result" style="margin-top: 8px; font-size: 0.85rem; display: none;"></div>
+                                </div>
+
+                                <!-- 【新增】Excel名单+图片目录一键批量导入 -->
+                                <div style="margin-bottom: 15px; padding: 12px; background: #f0fff0; border-radius: 8px; border: 1px dashed #2ecc71;">
+                                    <label style="font-weight: 600; color: #1a2a6c; display: block; margin-bottom: 8px;">
+                                        <i class="fas fa-file-excel"></i> Excel名单+图片目录批量导入
+                                    </label>
+                                    <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">
+                                        自动读取Excel学生名单，匹配xuehao_pic图片文件夹，精准绑定学号姓名
+                                    </p>
+                                    <button class="btn btn-action btn-export" type="button" id="btn-excel-import"
+                                            style="background: linear-gradient(90deg, #27ae60, #2ecc71);">
+                                        <i class="fas fa-file-import"></i> 开始Excel批量导入
+                                    </button>
+                                    <div id="excel-result" style="margin-top: 8px; font-size: 0.85rem; display: none;"></div>
+                                </div>
+
+                                <form action="{{ url_for('export_attendance') }}" method="post">
+                                    <button class="btn btn-action btn-export" type="submit">
+                                        <i class="fas fa-file-export"></i> 导出考勤记录
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('clear_attendance') }}" method="post">
+                                    <button class="btn btn-action btn-clear" type="submit">
+                                        <i class="fas fa-trash-alt"></i> 清除考勤记录
+                                    </button>
+                                </form>
+                                <button class="btn btn-action btn-danger-all" type="button" id="btn-clear-all">
+                                    <i class="fas fa-user-slash"></i> 清空全部人员
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>稳定版人脸识别考勤系统 © 2023 | 基于 Flask 和 dlib 构建 | 增强稳定性设计</p>
+            <p>系统运行时间: {{ system_status.uptime }} | 当前帧率: {{ system_status.frame_rate }} FPS</p>
+        </footer>
+    </div>
+
+    <!-- 【新增】清空全部人员确认弹窗 -->
+    <div class="modal-overlay" id="modal-clear-all">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="modal-title">确认清空全部人员？</div>
+            <div class="modal-msg">
+                此操作将<strong>永久删除</strong>所有已录入的人脸数据和照片，无法恢复。<br>
+                适合场景：全部重置后重新录入本人。
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" id="modal-cancel">取消</button>
+                <button class="modal-btn-confirm" id="modal-confirm">确认清空</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 【新增】空人员库开启识别警告弹窗 -->
+    <div class="modal-overlay" id="modal-empty-warn">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="fas fa-info-circle" style="color: #ff9800;"></i>
+            </div>
+            <div class="modal-title">人员库为空</div>
+            <div class="modal-msg">
+                当前没有任何已录入的人员，开启识别后所有检测到的人脸将显示为「陌生人」。<br>
+                建议先添加至少1位人员后再开启识别。
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" id="modal-empty-cancel">去添加人员</button>
+                <button class="modal-btn-confirm" style="background: #28a745;" id="modal-empty-confirm">仍然开启</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // 【新增】清空全部人员确认弹窗逻辑
+        const btnClearAll = document.getElementById('btn-clear-all');
+        const modalClearAll = document.getElementById('modal-clear-all');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+
+        if (btnClearAll) {
+            btnClearAll.addEventListener('click', function() {
+                modalClearAll.classList.add('active');
+            });
+        }
+
+        if (modalCancel) {
+            modalCancel.addEventListener('click', function() {
+                modalClearAll.classList.remove('active');
+            });
+        }
+
+        if (modalConfirm) {
+            modalConfirm.addEventListener('click', function() {
+                modalClearAll.classList.remove('active');
+                fetch('/clear_all_persons', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('已清空全部人员数据！');
+                            window.location.reload();
+                        } else {
+                            alert('清空失败: ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        alert('请求失败: ' + err);
+                    });
+            });
+        }
+
+        // 点击遮罩关闭弹窗
+        modalClearAll.addEventListener('click', function(e) {
+            if (e.target === modalClearAll) {
+                modalClearAll.classList.remove('active');
+            }
+        });
+
+        // 【新增】空人员库开启识别警告弹窗逻辑
+        const btnStartRecognize = document.getElementById('btn-start-recognize');
+        const modalEmptyWarn = document.getElementById('modal-empty-warn');
+        const modalEmptyCancel = document.getElementById('modal-empty-cancel');
+        const modalEmptyConfirm = document.getElementById('modal-empty-confirm');
+        const recognizeForm = document.getElementById('recognize-form');
+
+        // person_list 长度通过模板变量传入
+        const personCount = {{ person_list|length }};
+
+        if (btnStartRecognize && personCount === 0) {
+            btnStartRecognize.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalEmptyWarn.classList.add('active');
+            });
+        }
+
+        if (modalEmptyCancel) {
+            modalEmptyCancel.addEventListener('click', function() {
+                modalEmptyWarn.classList.remove('active');
+                // 切换到添加人员tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                document.querySelector('[data-tab="add"]').classList.add('active');
+                document.getElementById('add-tab').classList.add('active');
+            });
+        }
+
+        if (modalEmptyConfirm) {
+            modalEmptyConfirm.addEventListener('click', function() {
+                modalEmptyWarn.classList.remove('active');
+                if (recognizeForm) recognizeForm.submit();
+            });
+        }
+
+        modalEmptyWarn.addEventListener('click', function(e) {
+            if (e.target === modalEmptyWarn) {
+                modalEmptyWarn.classList.remove('active');
+            }
+        });
+
+        // 批量导入全班照片
+        const btnBatchImport = document.getElementById('btn-batch-import');
+        const batchFolder = document.getElementById('batch-folder');
+        const batchResult = document.getElementById('batch-result');
+
+        if (btnBatchImport) {
+            btnBatchImport.addEventListener('click', function() {
+                if (!batchFolder.files || batchFolder.files.length === 0) {
+                    alert('请先选择包含照片的文件夹！');
+                    return;
+                }
+
+                const formData = new FormData();
+                for (let i = 0; i < batchFolder.files.length; i++) {
+                    formData.append('files', batchFolder.files[i]);
+                }
+
+                btnBatchImport.disabled = true;
+                btnBatchImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中...';
+                batchResult.style.display = 'block';
+                batchResult.style.color = '#666';
+                batchResult.textContent = '正在处理，请稍候...';
+
+                fetch('/batch_import', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnBatchImport.disabled = false;
+                    btnBatchImport.innerHTML = '<i class="fas fa-users-cog"></i> 开始批量导入';
+                    if (data.status === 'success') {
+                        batchResult.style.color = '#28a745';
+                        batchResult.innerHTML = '<strong>' + data.message + '</strong>';
+                        if (data.details) {
+                            batchResult.innerHTML += '<br>' + data.details.join('<br>');
+                        }
+                        setTimeout(() => window.location.reload(), 3000);
+                    } else {
+                        batchResult.style.color = '#dc3545';
+                        batchResult.textContent = '导入失败: ' + data.message;
+                    }
+                })
+                .catch(err => {
+                    btnBatchImport.disabled = false;
+                    btnBatchImport.innerHTML = '<i class="fas fa-users-cog"></i> 开始批量导入';
+                    batchResult.style.color = '#dc3545';
+                    batchResult.textContent = '请求失败: ' + err;
+                });
+            });
+        }
+
+        // 【新增】Excel名单+图片目录一键批量导入
+        const btnExcelImport = document.getElementById('btn-excel-import');
+        const excelResult = document.getElementById('excel-result');
+
+        if (btnExcelImport) {
+            btnExcelImport.addEventListener('click', function() {
+                if (!confirm('确认开始Excel批量导入？\n\n将自动读取项目根目录的Excel学生名单，\n匹配xuehao_pic/xuehao_pic目录下的图片文件夹，\n精准绑定学号姓名后提取人脸特征。')) {
+                    return;
+                }
+
+                btnExcelImport.disabled = true;
+                btnExcelImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导入中...';
+                excelResult.style.display = 'block';
+                excelResult.style.color = '#666';
+                excelResult.textContent = '正在读取Excel名单并匹配图片文件夹，请稍候...';
+
+                fetch('/batch_import_excel', {
+                    method: 'POST'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btnExcelImport.disabled = false;
+                    btnExcelImport.innerHTML = '<i class="fas fa-file-import"></i> 开始Excel批量导入';
+                    if (data.status === 'success') {
+                        excelResult.style.color = '#28a745';
+                        let html = '<strong>' + data.message + '</strong>';
+                        if (data.details) {
+                            html += '<br>' + data.details.join('<br>');
+                        }
+                        if (data.no_photo_students && data.no_photo_students.length > 0) {
+                            html += '<br><br><strong style="color:#e67e22;">缺照片学生：</strong><br>' + data.no_photo_students.join('<br>');
+                        }
+                        if (data.invalid_folders && data.invalid_folders.length > 0) {
+                            html += '<br><br><strong style="color:#e74c3c;">无效文件夹：</strong><br>' + data.invalid_folders.join('<br>');
+                        }
+                        excelResult.innerHTML = html;
+                        setTimeout(() => window.location.reload(), 5000);
+                    } else {
+                        excelResult.style.color = '#dc3545';
+                        excelResult.textContent = '导入失败: ' + data.message;
+                    }
+                })
+                .catch(err => {
+                    btnExcelImport.disabled = false;
+                    btnExcelImport.innerHTML = '<i class="fas fa-file-import"></i> 开始Excel批量导入';
+                    excelResult.style.color = '#dc3545';
+                    excelResult.textContent = '请求失败: ' + err;
+                });
+            });
+        }
+
+        // 每15秒刷新页面以更新数据
+        setInterval(() => {
+            fetch(window.location.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(html, 'text/html');
+
+                    const newStatus = newDoc.querySelector('.system-status');
+                    if (newStatus) {
+                        document.querySelector('.system-status').innerHTML = newStatus.innerHTML;
+                    }
+
+                    const newCameraStatus = newDoc.querySelector('.status-badge');
+                    if (newCameraStatus) {
+                        document.querySelector('.status-badge').className = newCameraStatus.className;
+                        document.querySelector('.status-badge').textContent = newCameraStatus.textContent;
+                    }
+
+                    const newAttendance = newDoc.querySelector('.attendance-list');
+                    if (newAttendance) {
+                        document.querySelector('.attendance-list').innerHTML = newAttendance.innerHTML;
+                    }
+
+                    const newPersonList = newDoc.querySelector('.person-list');
+                    if (newPersonList) {
+                        document.querySelector('.person-list').innerHTML = newPersonList.innerHTML;
+                    }
+                })
+                .catch(error => console.error('部分更新失败:', error));
+        }, 15000);
+    </script>
+</body>
+</html>
